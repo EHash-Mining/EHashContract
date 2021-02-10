@@ -481,8 +481,8 @@ contract EHashToken is EHashBaseToken {
     // @dev a revenue share multiplier to avert divison downflow.
     uint256 internal constant REVENUE_SHARE_MULTIPLIER = 1e18;
     
-    // @dev update period for revenue distribution.
-    uint256 internal constant UPDATE_PERIOD = 30;
+    // @dev update period in secs for revenue distribution.
+    uint256 public updatePeriod = 30;
 
     // @dev for tracking of holders' claimable revenue.
     mapping (address => uint256) internal _revenueBalance;
@@ -523,7 +523,7 @@ contract EHashToken is EHashBaseToken {
     constructor(string memory _name, string memory _symbol, uint8 _decimals, uint256 _initialSupply) 
         EHashBaseToken(_name, _symbol, _decimals, _initialSupply)
         public {
-        _nextUpdate = block.timestamp + UPDATE_PERIOD;
+        _nextUpdate = block.timestamp + updatePeriod;
     }
     
     /**
@@ -532,6 +532,14 @@ contract EHashToken is EHashBaseToken {
     function setManagerAddress(address payable account) external onlyOwner {
         require (account != address(0), "0 address");
         managerAddress = account;
+    }
+    
+    /** 
+     * @notice set update period
+     */
+    function setUpdatePeriod(uint nsecs) external onlyOwner {
+        require (nsecs > 0," period should be positive");
+        updatePeriod = nsecs;
     }
     
     /**
@@ -674,7 +682,7 @@ contract EHashToken is EHashBaseToken {
         
         // next round setting                                 
         _currentRound++;
-        _nextUpdate = block.timestamp + UPDATE_PERIOD;
+        _nextUpdate = block.timestamp + updatePeriod;
     }
     
     /**
