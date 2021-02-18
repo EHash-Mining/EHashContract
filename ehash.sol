@@ -508,7 +508,6 @@ contract EHashToken is EHashBaseToken {
     /// @dev expected next update time
     uint private _nextUpdate = block.timestamp + updatePeriod;
 
-
     /// @dev manager's address
     address payable managerAddress;
 
@@ -670,17 +669,16 @@ contract EHashToken is EHashBaseToken {
     
     
     /**
-     * @notice update of options, could be triggered by anyone periodically
-     * to distribute the ETHERs
+     * update function to settle revenues
      */
     function update() internal {
         require (block.timestamp > _nextUpdate, "period not expired");
         require (managerAddress != address(0), "manager address has not set");
         
         // rules:
-        // 80% of round ethers belongs to all token holders
+        // 80% of ethers in this round belongs to all token holders
         //  roundEthers * 80% / totalSupply()
-        // 20% belongs to manager
+        // and, 20% of ethers belongs to manager
         uint256 roundEthers = _rounds[_currentRound].roundEthers;
         uint256 managerRevenue = roundEthers.mul(20).div(100);
         
