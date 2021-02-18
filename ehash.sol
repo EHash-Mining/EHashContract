@@ -528,7 +528,7 @@ contract EHashToken is EHashBaseToken {
         public {
     }
     
-    // tryUpdate function
+    // @dev tryUpdate function
     modifier tryUpdate() {
         if (block.timestamp > _nextUpdate) {
             update();
@@ -589,14 +589,14 @@ contract EHashToken is EHashBaseToken {
     }
     
     /**
-     * get round N information
+     * @notice get round N information
      */
     function getRoundData(uint round) external view returns(uint256 accTokenShare, uint256 roundEthers) {
         return (_rounds[round].accTokenShare, _rounds[round].roundEthers);
     }
     
     /**
-     * get current round
+     * @notice get current round
      */
     function getCurrentRound() external view returns(uint round) {
         return _currentRound;
@@ -669,7 +669,7 @@ contract EHashToken is EHashBaseToken {
     
     
     /**
-     * update function to settle revenues
+     * @dev update function to settle rounds shifting and rounds share.
      */
     function update() internal {
         require (block.timestamp > _nextUpdate, "period not expired");
