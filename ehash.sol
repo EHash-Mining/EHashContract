@@ -506,7 +506,8 @@ contract EHashToken is EHashBaseToken {
     uint private _currentRound = 1;
     
     /// @dev expected next update time
-    uint private _nextUpdate; // expected next sigma updating time;
+    uint private _nextUpdate = block.timestamp + updatePeriod;
+
 
     /// @dev manager's address
     address payable managerAddress;
@@ -526,7 +527,6 @@ contract EHashToken is EHashBaseToken {
     constructor(string memory _name, string memory _symbol, uint8 _decimals, uint256 _initialSupply) 
         EHashBaseToken(_name, _symbol, _decimals, _initialSupply)
         public {
-        _nextUpdate = block.timestamp + updatePeriod;
     }
     
     // tryUpdate function
