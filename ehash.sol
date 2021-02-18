@@ -563,7 +563,7 @@ contract EHashToken is EHashBaseToken, ReentrancyGuard{
     /**
      * @notice default ether receiving function 
      */
-    function deposit() external payable tryUpdate {
+    receive() external payable tryUpdate {
         _rounds[_currentRound].roundEthers += msg.value;
         emit Received(msg.sender, msg.value);
     }
