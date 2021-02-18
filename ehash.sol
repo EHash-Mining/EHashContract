@@ -507,7 +507,7 @@ contract EHashToken is EHashBaseToken {
     
     /// @dev expected next update time
     uint private _nextUpdate; // expected next sigma updating time;
-    
+
     /// @dev manager's address
     address payable managerAddress;
 
@@ -527,6 +527,14 @@ contract EHashToken is EHashBaseToken {
         EHashBaseToken(_name, _symbol, _decimals, _initialSupply)
         public {
         _nextUpdate = block.timestamp + updatePeriod;
+    }
+    
+    // tryUpdate function
+    modifier tryUpdate() {
+        if (block.timestamp > _nextUpdate) {
+            update();
+        }
+        _;
     }
     
     /**
@@ -553,13 +561,13 @@ contract EHashToken is EHashBaseToken {
      }
     
     /**
-     * default ether receiving function 
+     * @notice default ether receiving function 
      */
-    receive() external payable {
+    function deposit() external payable tryUpdate {
         _rounds[_currentRound].roundEthers += msg.value;
         emit Received(msg.sender, msg.value);
     }
-    
+
     /**
      * @notice check unclaimed revenue 
      */
@@ -621,7 +629,7 @@ contract EHashToken is EHashBaseToken {
      * settle revenue happens before any token exchange such as ERC20-transfer,mint,burn,
      * and active claim();
      */
-    function _settleRevenue(address account) internal {
+    function _settleRevenue(address account) internal tryUpdate {
         uint256 accountTokens = balanceOf(account);
         uint lastSettledRound = _settledRevenueRounds[account];
         
@@ -665,7 +673,7 @@ contract EHashToken is EHashBaseToken {
      * @notice update of options, could be triggered by anyone periodically
      * to distribute the ETHERs
      */
-    function update() public {
+    function update() internal {
         require (block.timestamp > _nextUpdate, "period not expired");
         require (managerAddress != address(0), "manager address has not set");
         
@@ -696,12 +704,5 @@ contract EHashToken is EHashBaseToken {
         // next round setting                                 
         _currentRound++;
         _nextUpdate = block.timestamp + updatePeriod;
-    }
-    
-    /**
-     * @notice get next update time
-     */
-    function getNextUpdateTime() external view returns (uint) {
-        return _nextUpdate;
     }
 }
