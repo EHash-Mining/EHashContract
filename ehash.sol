@@ -2,7 +2,7 @@
 
 pragma solidity 0.6.12;
 
-import "ehash_library.sol";
+import "./ehash_library.sol";
 
 /**
  * @dev Contract module which provides a basic access control mechanism, where
@@ -487,6 +487,9 @@ contract EHashToken is EHashBaseToken {
     // @dev for tracking of holders' claimable revenue.
     mapping (address => uint256) internal _revenueBalance;
     
+    // @dev for tracking of holders' claimed revenue.
+    mapping (address => uint256) internal _revenueClaimed;
+    
     /// @dev RoundData always kept for each round.
     struct RoundData {
         uint256 accTokenShare;     // accumulated unit ehash share for each settlement.
@@ -560,7 +563,7 @@ contract EHashToken is EHashBaseToken {
     /**
      * @notice check unclaimed revenue 
      */
-    function checkRevenue(address account) external view returns(uint256 revenue) {
+    function checkUnclaimedRevenue(address account) public view returns(uint256 revenue) {
         uint256 accountTokens = balanceOf(account);
         uint lastSettledRound = _settledRevenueRounds[account];
 
@@ -569,6 +572,13 @@ contract EHashToken is EHashBaseToken {
                                     .div(REVENUE_SHARE_MULTIPLIER);  // NOTE: div by REVENUE_SHARE_MULTIPLIER
 
         return _revenueBalance[account].add(roundRevenue);
+    }
+    
+    /**
+     * @notice get user's life-time gain
+     */
+    function checkTotalRevenue(address account) external view returns(uint256 revenue) {
+        return checkUnclaimedRevenue(account) + _revenueClaimed[account];
     }
     
     /**
@@ -598,6 +608,9 @@ contract EHashToken is EHashBaseToken {
         
         // transfer ETH to msg.sender
         msg.sender.sendValue(revenue);
+        
+        // record claimed revenue
+        _revenueClaimed[msg.sender] += revenue;
         
         // log
         emit Claim(msg.sender, revenue);
