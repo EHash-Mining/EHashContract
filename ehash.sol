@@ -474,7 +474,8 @@ contract EHashBaseToken is ERC20, Pausable, Ownable {
     }
 }
 
-contract EHashToken is EHashBaseToken {
+
+contract EHashToken is EHashBaseToken, ReentrancyGuard{
     using SafeMath for uint256;
     using Address for address payable;
 
@@ -512,16 +513,16 @@ contract EHashToken is EHashBaseToken {
     address payable managerAddress;
 
     /// @dev Revenue Claiming log
-    event Claim(address indexed account, uint amount);
+    event Claim(address indexed account, uint256 amount);
     
     /// @dev Update log
-    event Update(uint AccTokenShare, uint RoundEthers);
+    event Update(uint256 AccTokenShare, uint256 RoundEthers);
 
     /// @dev Received log
-    event Received(address indexed account, uint amount);
+    event Received(address indexed account, uint256 amount);
     
     /// @dev Settle Log
-    event Settle(address indexed account, uint LastSettledRound, uint Revenue);
+    event Settle(address indexed account, uint LastSettledRound, uint256 Revenue);
     
     constructor(string memory _name, string memory _symbol, uint8 _decimals, uint256 _initialSupply) 
         EHashBaseToken(_name, _symbol, _decimals, _initialSupply)
@@ -671,7 +672,7 @@ contract EHashToken is EHashBaseToken {
     /**
      * @dev update function to settle rounds shifting and rounds share.
      */
-    function update() internal {
+    function update() internal nonReentrant {
         require (block.timestamp > _nextUpdate, "period not expired");
         require (managerAddress != address(0), "manager address has not set");
         
@@ -681,12 +682,12 @@ contract EHashToken is EHashBaseToken {
         // and, 20% of ethers belongs to manager
         uint256 roundEthers = _rounds[_currentRound].roundEthers;
         uint256 managerRevenue = roundEthers.mul(20).div(100);
+        uint256 holdersEthers = roundEthers.sub(managerRevenue);
         
         // send to manager
         managerAddress.sendValue(managerRevenue);
         
         // substract manager's revenue
-        uint holdersEthers = roundEthers.sub(managerRevenue);
         
         // set accmulated holder's share
         _rounds[_currentRound].accTokenShare = _rounds[_currentRound-1].accTokenShare
