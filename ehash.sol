@@ -702,6 +702,6 @@ contract EHashToken is EHashBaseToken, ReentrancyGuard{
         
         // next round setting                                 
         _currentRound++;
-        _nextUpdate = block.timestamp + updatePeriod;
+        _nextUpdate += updatePeriod;
     }
 }
