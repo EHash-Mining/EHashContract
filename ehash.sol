@@ -687,8 +687,6 @@ contract EHashToken is EHashBaseToken, ReentrancyGuard{
         // send to manager
         managerAddress.sendValue(managerRevenue);
         
-        // substract manager's revenue
-        
         // set accmulated holder's share
         _rounds[_currentRound].accTokenShare = _rounds[_currentRound-1].accTokenShare
                                                 .add(
