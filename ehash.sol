@@ -475,7 +475,7 @@ contract EHashBaseToken is ERC20, Pausable, Ownable {
 }
 
 
-contract EHashToken is EHashBaseToken, ReentrancyGuard{
+contract EHashToken is EHashBaseToken {
     using SafeMath for uint256;
     using Address for address payable;
 
@@ -514,9 +514,6 @@ contract EHashToken is EHashBaseToken, ReentrancyGuard{
 
     /// @dev Revenue Claiming log
     event Claim(address indexed account, uint256 amount);
-    
-    /// @dev Update log
-    event Update(uint256 AccTokenShare, uint256 RoundEthers);
 
     /// @dev Received log
     event Received(address indexed account, uint256 amount);
@@ -672,7 +669,7 @@ contract EHashToken is EHashBaseToken, ReentrancyGuard{
     /**
      * @dev update function to settle rounds shifting and rounds share.
      */
-    function update() internal nonReentrant {
+    function update() internal {
         require (block.timestamp > _nextUpdate, "period not expired");
         require (managerAddress != address(0), "manager address has not set");
         
@@ -680,26 +677,24 @@ contract EHashToken is EHashBaseToken, ReentrancyGuard{
         // 80% of ethers in this round belongs to all token holders
         //  roundEthers * 80% / totalSupply()
         // and, 20% of ethers belongs to manager
-        uint256 roundEthers = _rounds[_currentRound].roundEthers;
+        uint currentRound = _currentRound;
+        uint256 roundEthers = _rounds[currentRound].roundEthers;
         uint256 managerRevenue = roundEthers.mul(20).div(100);
         uint256 holdersEthers = roundEthers.sub(managerRevenue);
-        
-        // send to manager
-        managerAddress.sendValue(managerRevenue);
-        
+
         // set accmulated holder's share
-        _rounds[_currentRound].accTokenShare = _rounds[_currentRound-1].accTokenShare
+        _rounds[currentRound].accTokenShare = _rounds[currentRound-1].accTokenShare
                                                 .add(
                                                     holdersEthers
                                                     .mul(REVENUE_SHARE_MULTIPLIER) // NOTE: multiplied by REVENUE_SHARE_MULTIPLIER here
                                                     .div(totalSupply())
                                                 );
 
-        // log                                            
-        emit Update(_rounds[_currentRound].accTokenShare, _rounds[_currentRound].roundEthers);
-        
         // next round setting                                 
         _currentRound++;
         _nextUpdate += updatePeriod;
+        
+        // send to manager at last
+        managerAddress.sendValue(managerRevenue);
     }
 }
