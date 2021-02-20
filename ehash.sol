@@ -670,9 +670,6 @@ contract EHashToken is EHashBaseToken {
      * @dev update function to settle rounds shifting and rounds share.
      */
     function update() internal {
-        require (block.timestamp > _nextUpdate, "period not expired");
-        require (managerAddress != address(0), "manager address has not set");
-        
         // rules:
         // 80% of ethers in this round belongs to all token holders
         //  roundEthers * 80% / totalSupply()
