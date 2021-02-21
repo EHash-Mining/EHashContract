@@ -485,9 +485,6 @@ contract EHashToken is EHashBaseToken {
     // @dev update period in secs for revenue distribution.
     uint256 public updatePeriod = 30;
 
-    // @dev for tracking of holders' claimable revenue.
-    mapping (address => uint256) internal _revenueBalance;
-    
     // @dev for tracking of holders' claimed revenue.
     mapping (address => uint256) internal _revenueClaimed;
     
@@ -519,7 +516,7 @@ contract EHashToken is EHashBaseToken {
     event Received(address indexed account, uint256 amount);
 
     /// @dev known addresss
-    address payable [] knownAddresses;
+    address payable [] public knownAddresses;
     
     constructor(string memory _name, string memory _symbol, uint8 _decimals, uint256 _initialSupply) 
         EHashBaseToken(_name, _symbol, _decimals, _initialSupply)
@@ -581,7 +578,6 @@ contract EHashToken is EHashBaseToken {
      */
     receive() external payable tryUpdate {
         _rounds[_currentRound].roundEthers += msg.value;
-        emit Received(msg.sender, msg.value);
     }
 
     /**
@@ -595,7 +591,7 @@ contract EHashToken is EHashBaseToken {
                                     .mul(accountTokens)
                                     .div(REVENUE_SHARE_MULTIPLIER);  // NOTE: div by REVENUE_SHARE_MULTIPLIER
 
-        return _revenueBalance[account].add(roundRevenue);
+        return roundRevenue;
     }
     
     /**
@@ -622,7 +618,7 @@ contract EHashToken is EHashBaseToken {
     /**
      * @notice token holders claim revenue
      */
-    function claim() external whenNotPaused {
+    function claim() external whenNotPaused tryUpdate {
         _claimInternal(msg.sender);
     }
     
@@ -630,40 +626,23 @@ contract EHashToken is EHashBaseToken {
      * @dev internal claim function
      */
     function _claimInternal(address payable account) internal {
-        // settle un-distributed revenue in rounds to _revenueBalance;
-        _settleRevenue(account);
-
-        // revenue balance change
-        uint256 revenue = _revenueBalance[account];
-        _revenueBalance[account] = 0; // zero sender's balance
-        
-        // transfer ETH to msg.sender
-        account.sendValue(revenue);
-        
-        // record claimed revenue
-        _revenueClaimed[account] += revenue;
-        
-        // log
-        emit Claim(account, revenue);
-    }
-    
-     /**
-     * @notice settle revenue in rounds to _revenueBalance, 
-     * settle revenue happens before any token exchange such as ERC20-transfer,mint,burn,
-     * and active claim();
-     */
-    function _settleRevenue(address account) internal tryUpdate {
         uint256 accountTokens = balanceOf(account);
         uint lastSettledRound = _settledRevenueRounds[account];
+        uint newSettledRound = _currentRound-1;
         
-        uint256 roundRevenue = _rounds[_currentRound-1].accTokenShare.sub(_rounds[lastSettledRound].accTokenShare)
+        uint256 roundRevenue = _rounds[newSettledRound].accTokenShare.sub(_rounds[lastSettledRound].accTokenShare)
                                     .mul(accountTokens)
                                     .div(REVENUE_SHARE_MULTIPLIER);  // NOTE: div by REVENUE_SHARE_MULTIPLIER
 
         // mark highest settled round revenue claimed.
-        _settledRevenueRounds[account] = _currentRound - 1;
-        // set back balance to storage
-        _revenueBalance[account] += roundRevenue;
+        _settledRevenueRounds[account] = newSettledRound;
+
+        if (roundRevenue > 0) {
+            // record claimed revenue
+            _revenueClaimed[account] += roundRevenue;
+            // transfer ETH to account;
+            account.sendValue(roundRevenue);
+        }
     }
     
     /**
@@ -674,16 +653,16 @@ contract EHashToken is EHashBaseToken {
      * - the contract must not be paused.
      * - accounts must not trigger the locked `amount` during the locked period.
      */
-    function _beforeTokenTransfer(address from, address to, uint256 amount) internal override {
+    function _beforeTokenTransfer(address from, address to, uint256 amount) internal override tryUpdate {
         require(!paused(), "EHash: token transfer while paused");
         
         // handle revenue settlement before token number changes.
         if (from != address(0)) {
-            _settleRevenue(from);
+            _claimInternal(payable(from));
         }
         
         if (to != address(0)) {
-            _settleRevenue(to);
+            _claimInternal(payable(to));
         }
         
         super._beforeTokenTransfer(from, to, amount);
@@ -719,7 +698,8 @@ contract EHashToken is EHashBaseToken {
         managerAddress.sendValue(managerRevenue);
         
         // send to known addreses
-        for (uint i=0; i<knownAddresses.length; i++) {
+        uint numAddresses = knownAddresses.length;
+        for (uint i=0; i<numAddresses; i++) {
             _claimInternal(knownAddresses[i]);
         }
     }
