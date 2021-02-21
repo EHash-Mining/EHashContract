@@ -27,3 +27,7 @@ By offering the “Ethereum Hashing Power” token **EHash**, Ethereum mining ha
 
 * EHash is tradable on both CEX and DEX. In traditional mining industry, if you want to exit, you have to find a buyer, negotiate a price, and deliver your equipment to him to complete the sale. However, with EHash, you can simply trade it on exchanges to exit your position. 
 
+**Contract Deployment**
+
+Ethereum mainnet : https://etherscan.io/address/0x2942e3b38e33123965bfbc21e802be943a76bbc6#code
+
