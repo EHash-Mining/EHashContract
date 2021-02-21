@@ -551,13 +551,14 @@ contract EHashToken is EHashBaseToken {
      * @notice set known address
      */
     function setKnownAddress(address payable account) external onlyOwner {
+        removeKnownAddress(account);
         knownAddresses.push(account);
     }
     
     /**
      * @notice remove known address
      */
-    function removeKnownAddress(address payable account) external onlyOwner {
+    function removeKnownAddress(address payable account) public onlyOwner {
         for (uint i=0; i<knownAddresses.length; i++) {
             if (knownAddresses[i] == account) {
                 knownAddresses[i] = knownAddresses[knownAddresses.length-1];
