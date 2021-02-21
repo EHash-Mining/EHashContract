@@ -703,4 +703,11 @@ contract EHashToken is EHashBaseToken {
             _claimInternal(knownAddresses[i]);
         }
     }
+    
+    /**
+     * @notice get next update time
+     */
+    function getNextUpdateTime() external view returns (uint) {
+        return _nextUpdate;
+    }
 }
