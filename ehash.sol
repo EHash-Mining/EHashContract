@@ -563,6 +563,7 @@ contract EHashToken is EHashBaseToken {
             if (knownAddresses[i] == account) {
                 knownAddresses[i] = knownAddresses[knownAddresses.length-1];
                 knownAddresses.pop();
+                return;
             }
         }
     }
