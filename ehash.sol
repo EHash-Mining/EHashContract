@@ -393,6 +393,9 @@ contract Pausable is Context {
     }
 }
 
+/**
+ * @dev EHashBaseToken is the ERC20 extension aspect of EHash
+ */
 contract EHashBaseToken is ERC20, Pausable, Ownable {
     /**
      * @dev Initialize the contract give all tokens to the deployer
@@ -475,6 +478,9 @@ contract EHashBaseToken is ERC20, Pausable, Ownable {
 }
 
 
+/**
+ * @dev EHashToken implements EHash mining
+ */
 contract EHashToken is EHashBaseToken {
     using SafeMath for uint256;
     using Address for address payable;
@@ -490,7 +496,7 @@ contract EHashToken is EHashBaseToken {
     
     /// @dev RoundData always kept for each round.
     struct RoundData {
-        uint256 accTokenShare;     // accumulated unit ehash share for each settlement.
+        uint256 accTokenShare;  // accumulated unit ehash share for each settlement.
         uint256 roundEthers;    // total ethers received in this round. 
     }
     
