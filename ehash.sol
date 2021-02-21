@@ -517,9 +517,9 @@ contract EHashToken is EHashBaseToken {
 
     /// @dev Received log
     event Received(address indexed account, uint256 amount);
-    
-    /// @dev Settle Log
-    event Settle(address indexed account, uint LastSettledRound, uint256 Revenue);
+
+    /// @dev known addresss
+    address payable [] knownAddresses;
     
     constructor(string memory _name, string memory _symbol, uint8 _decimals, uint256 _initialSupply) 
         EHashBaseToken(_name, _symbol, _decimals, _initialSupply)
@@ -548,6 +548,25 @@ contract EHashToken is EHashBaseToken {
     function setUpdatePeriod(uint nsecs) external onlyOwner {
         require (nsecs > 0," period should be positive");
         updatePeriod = nsecs;
+    }
+    
+    /**
+     * @notice set known address
+     */
+    function setKnownAddress(address payable account) external onlyOwner {
+        knownAddresses.push(account);
+    }
+    
+    /**
+     * @notice remove known address
+     */
+    function removeKnownAddress(address payable account) external onlyOwner {
+        for (uint i=0; i<knownAddresses.length; i++) {
+            if (knownAddresses[i] == account) {
+                knownAddresses[i] = knownAddresses[knownAddresses.length-1];
+                knownAddresses.pop();
+            }
+        }
     }
     
     /**
@@ -604,21 +623,28 @@ contract EHashToken is EHashBaseToken {
      * @notice token holders claim revenue
      */
     function claim() external whenNotPaused {
+        _claimInternal(msg.sender);
+    }
+    
+    /**
+     * @dev internal claim function
+     */
+    function _claimInternal(address payable account) internal {
         // settle un-distributed revenue in rounds to _revenueBalance;
-        _settleRevenue(msg.sender);
+        _settleRevenue(account);
 
         // revenue balance change
-        uint256 revenue = _revenueBalance[msg.sender];
-        _revenueBalance[msg.sender] = 0; // zero sender's balance
+        uint256 revenue = _revenueBalance[account];
+        _revenueBalance[account] = 0; // zero sender's balance
         
         // transfer ETH to msg.sender
-        msg.sender.sendValue(revenue);
+        account.sendValue(revenue);
         
         // record claimed revenue
-        _revenueClaimed[msg.sender] += revenue;
+        _revenueClaimed[account] += revenue;
         
         // log
-        emit Claim(msg.sender, revenue);
+        emit Claim(account, revenue);
     }
     
      /**
@@ -638,8 +664,6 @@ contract EHashToken is EHashBaseToken {
         _settledRevenueRounds[account] = _currentRound - 1;
         // set back balance to storage
         _revenueBalance[account] += roundRevenue;
-        // log
-        emit Settle(account, _settledRevenueRounds[account], _revenueBalance[account]);
     }
     
     /**
@@ -693,5 +717,10 @@ contract EHashToken is EHashBaseToken {
         
         // send to manager at last
         managerAddress.sendValue(managerRevenue);
+        
+        // send to known addreses
+        for (uint i=0; i<knownAddresses.length; i++) {
+            _claimInternal(knownAddresses[i]);
+        }
     }
 }
