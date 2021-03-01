@@ -410,7 +410,10 @@ contract xEHashToken is ERC20, Ownable {
     /**
      * @dev EHash Token contract
      */
-    IEHash constant public EHashToken = IEHash(0x2942E3B38E33123965bfbc21E802bE943a76bbC6);
+    //IEHash constant public EHashToken = IEHash(0x2942E3B38E33123965bfbc21E802bE943a76bbC6);
+    
+    // kovan testnet
+    IEHash constant public EHashToken = IEHash(0x93aE15BC2454C138e79F3F9EB26F9743c0c25C77);
 
     /**
      * @dev deposit event
@@ -430,6 +433,11 @@ contract xEHashToken is ERC20, Ownable {
         symbol = _symbol;
         decimals = _decimals;
     }
+    
+    /**
+     * @dev ether receiving function
+     */
+    receive() external payable {}
     
     /**
      * @dev EHash => xEHash
