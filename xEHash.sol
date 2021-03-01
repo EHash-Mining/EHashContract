@@ -407,9 +407,6 @@ contract XEHashToken is ERC20, Ownable {
     using SafeMath for uint256;
     using Address for address payable;
 
-    /// @dev mark token holders' round of deposit
-    mapping (address => uint) private _depositRevenueRounds;
-    
     /**
      * @dev EHash Token contract
      */
