@@ -400,9 +400,9 @@ interface IEHash is IERC20 {
 }
 
 /**
- * @dev XEHashToken is 1:1 pegged to EHashToken, without losing the benefits while exchanging.
+ * @dev xEHashToken is 1:1 pegged to EHash, without losing the benefits while exchanging.
  */
-contract XEHashToken is ERC20, Ownable {
+contract xEHashToken is ERC20, Ownable {
     using SafeERC20 for IEHash;
     using SafeMath for uint256;
     using Address for address payable;
@@ -432,7 +432,7 @@ contract XEHashToken is ERC20, Ownable {
     }
     
     /**
-     * @dev EHash -> XEHash
+     * @dev EHash => xEHash
      */
     function deposit(uint256 amount) external  {
         EHashToken.safeTransferFrom(msg.sender, address(this), amount);
@@ -442,12 +442,12 @@ contract XEHashToken is ERC20, Ownable {
     }
     
     /**
-     * @dev XEHash -> EHash
+     * @dev xEHash => EHash
      */
     function withdraw(uint256 amount) external {
         require (amount <= balanceOf(msg.sender), "balance exceeded");
 
-        // claim revenue to XEHash contract
+        // claim revenue to xEHash contract
         EHashToken.claim();
         
         // calculate msg.sender's ethers revenue in prorata basis
@@ -455,7 +455,7 @@ contract XEHashToken is ERC20, Ownable {
                         .mul(amount)
                         .div(totalSupply());
                         
-        // burn XEHash Token                   
+        // burn xEHash Token                   
         _burn(msg.sender,amount);
         
         // transfer value to sender
