@@ -435,8 +435,12 @@ contract xEHashToken is ERC20, Ownable {
      * @dev EHash => xEHash
      */
     function deposit(uint256 amount) external  {
+        // transfer EHash token to this contract
         EHashToken.safeTransferFrom(msg.sender, address(this), amount);
+        
+        // mint xEHash token to msg.sender
         _mint(msg.sender, amount);
+        
         // log
         emit Deposit(msg.sender, amount);
     }
@@ -447,7 +451,7 @@ contract xEHashToken is ERC20, Ownable {
     function withdraw(uint256 amount) external {
         require (amount <= balanceOf(msg.sender), "balance exceeded");
 
-        // claim revenue to xEHash contract
+        // claim revenue to this contract
         EHashToken.claim();
         
         // calculate msg.sender's ethers revenue in prorata basis
@@ -466,5 +470,18 @@ contract xEHashToken is ERC20, Ownable {
         
         // log         
         emit Withdraw(msg.sender, amount);
+    }
+    
+    /**
+     * @dev Batch transfer amount to recipient
+     * @notice that excessive gas consumption causes transaction revert
+     */
+    function batchTransfer(address[] memory recipients, uint256[] memory amounts) public {
+        require(recipients.length > 0, "xEHashToken: least one recipient address");
+        require(recipients.length == amounts.length, "xEHashToken: number of recipient addresses does not match the number of tokens");
+
+        for(uint256 i = 0; i < recipients.length; ++i) {
+            _transfer(_msgSender(), recipients[i], amounts[i]);
+        }
     }
 }
