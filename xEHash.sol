@@ -261,7 +261,7 @@ contract xEHashToken is ERC20 {
      * @dev EHash Token contract
      */
     //IEHash constant public EHashToken = IEHash(0x2942E3B38E33123965bfbc21E802bE943a76bbC6);
-    
+
     // kovan testnet
     IEHash constant public EHashToken = IEHash(0x93aE15BC2454C138e79F3F9EB26F9743c0c25C77);
 
@@ -269,7 +269,7 @@ contract xEHashToken is ERC20 {
      * @dev deposit event
      */
     event Deposit(address indexed account, uint amount);
-    
+
     /**
      * @dev withdraw event
      */
@@ -283,53 +283,54 @@ contract xEHashToken is ERC20 {
         symbol = _symbol;
         decimals = _decimals;
     }
-    
+
     /**
      * @dev ether receiving function
      */
-    receive() external payable {}
+    receive() external payable {
+        // Here we return all ETH revenue back to sender(i.e. EHash Contract)
+        // for redistribution.
+        msg.sender.sendValue(msg.value);
+    }
     
+    /**
+     * @dev before deposit & withdraw
+     */
+    modifier update() {
+        EHashToken.claim();
+        _;
+    }
+
     /**
      * @dev EHash => xEHash
      */
-    function deposit(uint256 amount) external  {
+    function deposit(uint256 amount) external update {
         // transfer EHash token to this contract
         EHashToken.safeTransferFrom(msg.sender, address(this), amount);
-        
+
         // mint xEHash token to msg.sender
         _mint(msg.sender, amount);
-        
+
         // log
         emit Deposit(msg.sender, amount);
     }
-    
+
     /**
      * @dev xEHash => EHash
      */
-    function withdraw(uint256 amount) external {
-        require (amount <= balanceOf(msg.sender), "balance exceeded");
+    function withdraw(uint256 amount) external update {
+        require (amount <= balanceOf(msg.sender), "xEHashToken: balance exceeded");
 
-        // claim revenue to this contract
-        EHashToken.claim();
-        
-        // calculate msg.sender's ethers revenue in prorata basis
-        uint256 revenue = address(this).balance
-                        .mul(amount)
-                        .div(totalSupply());
-                        
-        // burn xEHash Token                   
+        // burn xEHash Token
         _burn(msg.sender,amount);
-        
-        // transfer value to sender
-        msg.sender.sendValue(revenue);
-        
+
         // transfer EHash back to sender
         EHashToken.safeTransfer(msg.sender, amount);
-        
-        // log         
+
+        // log
         emit Withdraw(msg.sender, amount);
     }
-    
+
     /**
      * @dev Batch transfer amount to recipient
      * @notice that excessive gas consumption causes transaction revert
