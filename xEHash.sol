@@ -287,17 +287,18 @@ contract xEHashToken is ERC20 {
     /**
      * @dev ether receiving function
      */
-    receive() external payable {
-        // Here we return all ETH revenue back to sender(i.e. EHash Contract)
-        // for redistribution.
-        msg.sender.sendValue(msg.value);
-    }
+    receive() external payable {}
     
     /**
      * @dev before deposit & withdraw
      */
     modifier update() {
+        // We return all ETH revenue back to EHash Contract as mining reward.
+        // for redistribution.
         EHashToken.claim();
+        if (address(this).balance > 0) {
+            payable(address(EHashToken)).sendValue(address(this).balance);
+        }
         _;
     }
 
@@ -322,7 +323,7 @@ contract xEHashToken is ERC20 {
         require (amount <= balanceOf(msg.sender), "xEHashToken: balance exceeded");
 
         // burn xEHash Token
-        _burn(msg.sender,amount);
+        _burn(msg.sender, amount);
 
         // transfer EHash back to sender
         EHashToken.safeTransfer(msg.sender, amount);
