@@ -250,7 +250,7 @@ interface IEHash is IERC20 {
 }
 
 /**
- * @dev xEHashToken is 1:1 pegged to EHash, without losing the benefits while exchanging.
+ * @dev xEHashToken is 1:1 pegged to EHash and for DeFi eXchanging, such as Uniswap.
  */
 contract xEHashToken is ERC20 {
     using SafeERC20 for IEHash;
