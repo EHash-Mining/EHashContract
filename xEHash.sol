@@ -305,7 +305,7 @@ contract xEHashToken is ERC20 {
     /**
      * @dev EHash => xEHash
      */
-    function deposit(uint256 amount) external update {
+    function swapIn(uint256 amount) external update {
         // transfer EHash token to this contract
         EHashToken.safeTransferFrom(msg.sender, address(this), amount);
 
@@ -319,7 +319,7 @@ contract xEHashToken is ERC20 {
     /**
      * @dev xEHash => EHash
      */
-    function withdraw(uint256 amount) external update {
+    function swapOut(uint256 amount) external update {
         require (amount <= balanceOf(msg.sender), "xEHashToken: balance exceeded");
 
         // burn xEHash Token
