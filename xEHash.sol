@@ -266,14 +266,14 @@ contract xEHashToken is ERC20 {
     IEHash constant public EHashToken = IEHash(0x93aE15BC2454C138e79F3F9EB26F9743c0c25C77);
 
     /**
-     * @dev deposit event
+     * @dev SwapIn event
      */
-    event Deposit(address indexed account, uint amount);
+    event SwapIn(address indexed account, uint amount);
 
     /**
-     * @dev withdraw event
+     * @dev SwapOut event
      */
-    event Withdraw(address indexed account, uint amount);
+    event SwapOut(address indexed account, uint amount);
 
     /**
      * @dev Initialize the contract give all tokens to the deployer
@@ -313,7 +313,7 @@ contract xEHashToken is ERC20 {
         _mint(msg.sender, amount);
 
         // log
-        emit Deposit(msg.sender, amount);
+        emit SwapIn(msg.sender, amount);
     }
 
     /**
@@ -329,7 +329,7 @@ contract xEHashToken is ERC20 {
         EHashToken.safeTransfer(msg.sender, amount);
 
         // log
-        emit Withdraw(msg.sender, amount);
+        emit SwapOut(msg.sender, amount);
     }
 
     /**
