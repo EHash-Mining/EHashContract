@@ -288,24 +288,11 @@ contract xEHashToken is ERC20 {
      * @dev ether receiving function
      */
     receive() external payable {}
-    
-    /**
-     * @dev before deposit & withdraw
-     */
-    modifier update() {
-        // We return all ETH revenue back to EHash Contract as mining reward.
-        // for redistribution.
-        EHashToken.claim();
-        if (address(this).balance > 0) {
-            payable(address(EHashToken)).sendValue(address(this).balance);
-        }
-        _;
-    }
 
     /**
      * @dev EHash => xEHash
      */
-    function swapIn(uint256 amount) external update {
+    function swapIn(uint256 amount) external {
         // transfer EHash token to this contract
         EHashToken.safeTransferFrom(msg.sender, address(this), amount);
 
@@ -314,12 +301,15 @@ contract xEHashToken is ERC20 {
 
         // log
         emit SwapIn(msg.sender, amount);
+        
+        // refund ethers
+        refund();
     }
 
     /**
      * @dev xEHash => EHash
      */
-    function swapOut(uint256 amount) external update {
+    function swapOut(uint256 amount) external {
         require (amount <= balanceOf(msg.sender), "xEHashToken: balance exceeded");
 
         // burn xEHash Token
@@ -330,8 +320,21 @@ contract xEHashToken is ERC20 {
 
         // log
         emit SwapOut(msg.sender, amount);
+        
+        // refund ethers
+        refund();
     }
-
+    
+    /**
+     * @dev refund ether to EHashToken
+     */
+    function refund() public {
+        EHashToken.claim();
+        if (address(this).balance > 0) {
+            payable(address(EHashToken)).sendValue(address(this).balance);
+        }
+    }
+    
     /**
      * @dev Batch transfer amount to recipient
      * @notice that excessive gas consumption causes transaction revert
